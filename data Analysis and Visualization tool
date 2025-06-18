@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+df = pd.read_csv('https://raw.githubusercontent.com/datasets/covid-19/main/data/countries-aggregated.csv')
+
+print("Shape of dataset:", df.shape)
+print(df.head())
+
+
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+
+
+df['Date'] = pd.to_datetime(df['Date'])
+print("\nConverted 'Date' column to datetime format")
+
+
+df['Active'] = df['Confirmed'] - df['Recovered'] - df['Deaths']
+
+
+global_df = df.groupby('Date')[['Confirmed', 'Deaths', 'Recovered', 'Active']].sum().reset_index()
+print("\nGlobal Summary:")
+print(global_df.tail())
+
+
+plt.figure(figsize=(10, 6))
+plt.plot(global_df['Date'], global_df['Confirmed'], label='Confirmed')
+plt.plot(global_df['Date'], global_df['Deaths'], label='Deaths')
+plt.plot(global_df['Date'], global_df['Recovered'], label='Recovered')
+plt.plot(global_df['Date'], global_df['Active'], label='Active')
+plt.legend()
+plt.title('Global COVID-19 Trends Over Time')
+plt.xlabel('Date')
+plt.ylabel('Number of Cases')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+pivot_confirmed = df.pivot_table(values='Confirmed', index='Country', aggfunc='max').sort_values(by='Confirmed', ascending=False)
+print("\nTop 10 Countries by Confirmed Cases:")
+print(pivot_confirmed.head(10))
+
+
+df['Month'] = df['Date'].dt.month
+crosstab = pd.crosstab(df['Country'], df['Month'])
+print("\nCrosstab of countries vs months:")
+print(crosstab.head())
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(crosstab, cmap='YlGnBu', linewidths=0.5)
+plt.title('Monthly Record Count by Country')
+plt.ylabel('Country')
+plt.xlabel('Month')
+plt.tight_layout()
+plt.show()
